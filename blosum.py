@@ -147,41 +147,41 @@ def output_matrix(ratios, path):
 
 
 def main(args):
-    # sequences = ["TSVKTYAKFVTH", "TSVKTYAKFSTH", "TSVKTYAKFVTH", "LSVKKYPKYVVQ", "SSVKKYPKYSVL"]
     # Reading sequences from file
     sequences = read_file(args.input)
+    #sequences = ["TSVKTYAKFVTH", "TSVKTYAKFSTH", "TSVKTYAKFVTH", "LSVKKYPKYVVQ", "SSVKKYPKYSVL"]
 
     # Getting element frequency fa
     fa = get_frequency(sequences)
-    #print(fa)
+    print(fa)
 
     # Getting number of elements
     n = sum(fa.values())
-    #print(n)
+    print(n)
 
     # Get element probability
     pa = get_probability(fa, n)
-    #print(pa)
+    print(pa)
 
     # Get Pair frequency
     fab = get_pair_frequency(sequences)
-    #print(fab)
+    print(fab)
 
     # Get number of pairs
     n_p = sum(fab.values())
-    #print(n_p)
+    print(n_p)
 
     # Get observed pair probability
     pab = get_probability(fab, n_p)
-    #print(pab)
+    print(pab)
 
     # Get expected pair probability
     eab = get_expected_probability(pa)
-    #print(eab)
+    print(eab)
 
     # Get logs ratio
     sab = get_log_odds_score(pab, eab)
-    #print(sab)
+    print(sab)
 
     # Output substitution matrix
     output_matrix(sab, args.output)
