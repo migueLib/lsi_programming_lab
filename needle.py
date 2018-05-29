@@ -27,6 +27,8 @@ def get_options():
                           required=False, help="Path for input 1 sequence in fasta format")
     standard.add_argument('-s2', "--seq2", dest="seq2", action='store',
                           required=False, help="Path for input 2 sequence in fasta format")
+    standard.add_argument('-l', "--local", dest="local", action='store_true', default=False,
+                          required=False, help="Path to output matrix in wide format.")
     standard.add_argument('-o', "--output", dest="output", action='store',
                           required=False, help="Path to output matrix in wide format.")
 
@@ -145,28 +147,45 @@ def get_local_alignment(seq1, seq2, w, substitution):
         for j in range(1, len(seq2)+1):
             m[i, j] = max([0, m[i, j-1] + w, m[i-1, j] + w, m[i-1, j-1] + int(substitution[seq1[i-1]][seq2[j-1]])])
 
-    # Creating a data frame with the scores
-    # print(m.shape)
-    # m = pd.DataFrame(data=m, index=[""]+list(seq1), columns=[""]+list(seq2))
-
     return m
 
 
-def get_traceback(m, seq1, seq2):
+def get_max_val_coordinates(scores):
+    """
+    Get max value from the local alignment
+
+    :param scores: score alignments
+    :return: coordinates to max value
+    """
+
+    max_row = np.argmax(scores, axis=0)
+    max_coordinates = list(zip(max_row, range(len(max_row))))
+    max_value = np.argmax([scores[i, j] for i, j in max_coordinates])
+    max_val_coordinates = max_coordinates[max_value]
+
+    return max_val_coordinates
+
+
+def get_traceback(m, seq1, seq2, local=True):
     """
     Trace back the best global alignment
 
     :param m: scoring matrix
-    :param seq1: secuencia 1
-    :param seq2: secuencia 2
+    :param seq1: sequence 1
+    :param seq2: sequence 2
+    :param local: boolean to use local or global traceback (True default)
     :return: list with aligned pairs
     """
-    # Initial coordinates
-    i, j = len(seq1), len(seq2)
-    aligned = list()
+    # Initial coordinates and condition
+    if local:
+        i, j = get_max_val_coordinates(m)
+        condition = m[i, j+1] > 0 or m[i, j] > 0 or m[i+1, j] > 0
+    else:
+        i, j = len(seq1), len(seq2)
+        condition = i > 0 and j > 0
 
-    # YA ME QUIERO MORIR, ESTA TAREA ME VA A MATAR
-    while i > 0 and j > 0:
+    aligned = list()
+    while condition:
         a = m[i-1, j]
         b = m[i-1, j-1]
         c = m[i, j-1]
@@ -182,10 +201,23 @@ def get_traceback(m, seq1, seq2):
             i, j = i, j-1
             aligned.append(["-", seq2[j]])
 
+        # Calculate the next condition
+        if local:
+            condition = m[i, j+1] > 0 or m[i, j] > 0 or m[i+1, j] > 0
+        else:
+            condition = i > 0 and j > 0
+
     return aligned
 
 
 def formatted_alignment(aligned, substitution):
+    """
+    Give format to the alignment
+
+    :param aligned: list of aligned sequences
+    :param substitution: substitution matrix
+    :return: list of aligned sequences + format
+    """
     symbol = list()
     for a, b in aligned:
 
@@ -218,26 +250,27 @@ def main(args):
     global_scores = get_global_alignment(seq1, seq2, args.gap, blosum)
     local_scores = get_local_alignment(seq1, seq2, args.gap, blosum)
 
-    # Print alignment matrix
-    max_col = np.argmax(local_scores, axis=0)
-    print(np.argmax(max_col))
-
-    # print([[i, np.argmax(local_scores, axis=i)] for i in range(len(local_scores))])
-    local_scores = pd.DataFrame(local_scores, index=[""]+list(seq1), columns=[""]+list(seq2))
-    local_scores.to_csv("local_scores.txt", sep="\t")
-
     # Traceback
-    alignment = get_traceback(global_scores, seq1, seq2)
+    # alignment = get_traceback(global_scores, seq1, seq2)
+    alignment = get_traceback(local_scores, seq1, seq2, local=args.local)
 
     # Print aligned sequences
     alignment = formatted_alignment(alignment, blosum)
 
+    # Get identity and similarity
+    formatted = [b for _, b, _ in alignment]
+    identity = formatted.count("|")/len(formatted)
+    similarity = (formatted.count("|") + formatted.count(":"))/len(formatted)
+
     # Output alignment
     with open(args.output, "w") as OUT:
         print("Score: {0}".format(global_scores[len(seq1),len(seq2)]), file=OUT)
-        print("".join([a for a,_,_ in alignment]), file=OUT)
-        print("".join([b for _,b,_ in alignment]), file=OUT)
-        print("".join([c for _,_,c in alignment]), file=OUT)
+        print("Identity: {0:.3}%".format(identity*100), file=OUT)
+        print("Similarity: {0:.3}%".format(similarity*100), file=OUT)
+        print("".join([a for a, _, _ in alignment]), file=OUT)
+        print("".join([b for _, b, _ in alignment]), file=OUT)
+        print("".join([c for _, _, c in alignment]), file=OUT)
+
 
 if __name__ == '__main__':
     # Command line options
