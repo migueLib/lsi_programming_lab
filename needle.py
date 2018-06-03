@@ -134,14 +134,6 @@ def get_local_alignment(seq1, seq2, w, substitution):
     # Create empty matrix
     m = np.zeros((len(seq1)+1, len(seq2)+1))
 
-    # Fill gaps i=0 and j=0; this one is for rows
-    for i in range(1, len(seq1)+1):
-        m[i, 0] = m[i - 1, 0] + w
-
-    # This one is for columns
-    for i in range(1, len(seq2)+1):
-        m[0, i] = m[0, i-1] + w
-
     # Fill the rest of the matrix
     for i in range(1, len(seq1)+1):
         for j in range(1, len(seq2)+1):
@@ -166,26 +158,21 @@ def get_max_val_coordinates(scores):
     return max_val_coordinates
 
 
-def get_traceback(m, seq1, seq2, local=True):
+def get_global_traceback(m, seq1, seq2):
     """
     Trace back the best global alignment
 
     :param m: scoring matrix
     :param seq1: sequence 1
     :param seq2: sequence 2
-    :param local: boolean to use local or global traceback (True default)
     :return: list with aligned pairs
     """
-    # Initial coordinates and condition
-    if local:
-        i, j = get_max_val_coordinates(m)
-        condition = m[i, j+1] > 0 or m[i, j] > 0 or m[i+1, j] > 0
-    else:
-        i, j = len(seq1), len(seq2)
-        condition = i > 0 and j > 0
-
+    # Initial coordinates
+    i, j = len(seq1), len(seq2)
     aligned = list()
-    while condition:
+
+    # While that stops on first element of the matrix
+    while i > 0 and j > 0:
         a = m[i-1, j]
         b = m[i-1, j-1]
         c = m[i, j-1]
@@ -202,10 +189,54 @@ def get_traceback(m, seq1, seq2, local=True):
             aligned.append(["-", seq2[j]])
 
         # Calculate the next condition
-        if local:
-            condition = m[i, j+1] > 0 or m[i, j] > 0 or m[i+1, j] > 0
+        condition = i > 0 and j > 0
+
+    return aligned
+
+
+def get_local_traceback(m, seq1, seq2):
+    """
+    Trace back the best global alignment
+
+    :param m: scoring matrix
+    :param seq1: sequence 1
+    :param seq2: sequence 2
+    :return: list with aligned pairs
+    """
+    # Initial coordinates and condition
+    i, j = get_max_val_coordinates(m)
+
+    # Aligned sequence
+    aligned = list()
+
+    # Do while structure
+    a = m[i - 1, j]
+    b = m[i - 1, j - 1]
+    c = m[i, j - 1]
+    if b >= a and b >= c:
+        i, j = i - 1, j - 1
+        aligned.append([seq1[i], seq2[j]])
+    elif a >= c:
+        i, j = i - 1, j
+        aligned.append([seq1[i], "-"])
+    else:
+        i, j = i, j - 1
+        aligned.append(["-", seq2[j]])
+
+    while m[i, j+1] > 0 or m[i, j] > 0 or m[i+1, j] > 0:
+        a = m[i-1, j]
+        b = m[i-1, j-1]
+        c = m[i, j-1]
+
+        if b >= a and b >= c:
+            i, j = i-1, j-1
+            aligned.append([seq1[i], seq2[j]])
+        elif a >= c:
+            i, j = i-1, j
+            aligned.append([seq1[i], "-"])
         else:
-            condition = i > 0 and j > 0
+            i, j = i, j-1
+            aligned.append(["-", seq2[j]])
 
     return aligned
 
@@ -223,13 +254,10 @@ def formatted_alignment(aligned, substitution):
 
         if a == b:
             symbol.append([a, "|", b])
-
         elif a == "-" or b == "-":
             symbol.append([a, " ", b])
-
         elif int(substitution[a][b]) > 0:
             symbol.append([a, ":", b])
-
         else:
             symbol.append([a, " ", b])
 
@@ -246,15 +274,15 @@ def main(args):
     seq1 = read_seq(args.seq1)
     seq2 = read_seq(args.seq2)
 
-    # Get global and local alignment scores
-    global_scores = get_global_alignment(seq1, seq2, args.gap, blosum)
-    local_scores = get_local_alignment(seq1, seq2, args.gap, blosum)
+    # Get global and local alignment scores and do traceback
+    if args.local:
+        scores = get_local_alignment(seq1, seq2, args.gap, blosum)
+        alignment = get_local_traceback(scores, seq1, seq2)
+    else:
+        scores = get_global_alignment(seq1, seq2, args.gap, blosum)
+        alignment = get_global_traceback(scores, seq1, seq2)
 
-    # Traceback
-    # alignment = get_traceback(global_scores, seq1, seq2)
-    alignment = get_traceback(local_scores, seq1, seq2, local=args.local)
-
-    # Print aligned sequences
+    # Format alignment, identity, similarity
     alignment = formatted_alignment(alignment, blosum)
 
     # Get identity and similarity
@@ -264,7 +292,7 @@ def main(args):
 
     # Output alignment
     with open(args.output, "w") as OUT:
-        print("Score: {0}".format(global_scores[len(seq1),len(seq2)]), file=OUT)
+        print("Score: {0}".format(scores[len(seq1),len(seq2)]), file=OUT)
         print("Identity: {0:.3}%".format(identity*100), file=OUT)
         print("Similarity: {0:.3}%".format(similarity*100), file=OUT)
         print("".join([a for a, _, _ in alignment]), file=OUT)

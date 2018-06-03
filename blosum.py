@@ -135,7 +135,7 @@ def output_matrix(ratios, path):
     aa = sorted(list(set([list(i)[0] for i in ratios.keys()])))
 
     # Creating empty data frame
-    my_df = pd.DataFrame(data=np.zeros((len(aa),len(aa))), index=aa, columns=aa)
+    my_df = pd.DataFrame(data=np.zeros((len(aa),len(aa))), index=aa, columns=aa, dtype=int)
 
     # Filling df
     for key in ratios.keys():
