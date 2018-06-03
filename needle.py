@@ -266,6 +266,32 @@ def formatted_alignment(aligned, substitution):
     return symbol
 
 
+def output(path, alignment, scores, seq1, seq2):
+    """
+    Outputs formated file with locan and global alingment
+
+    :param path: output file
+    :param alignment: alignment
+    :param scores: score matrix
+    :param seq1: sequence 1
+    :param seq2: sequence 2
+    :return: file
+    """
+    with open(path, "w") as OUT:
+        # Get identity and similarity
+        formatted = [b for _, b, _ in alignment]
+        identity = formatted.count("|") / len(formatted)
+        similarity = (formatted.count("|") + formatted.count(":")) / len(formatted)
+
+        # Print results
+        print("Score: {0}".format(scores[len(seq1), len(seq2)]), file=OUT)
+        print("Identity: {0:.3}%".format(identity * 100), file=OUT)
+        print("Similarity: {0:.3}%".format(similarity * 100), file=OUT)
+        print("".join([a for a, _, _ in alignment]), file=OUT)
+        print("".join([b for _, b, _ in alignment]), file=OUT)
+        print("".join([c for _, _, c in alignment]), file=OUT)
+
+
 def main(args):
     # Read blosum matrix
     blosum = read_blosum(args.score)
@@ -285,19 +311,8 @@ def main(args):
     # Format alignment, identity, similarity
     alignment = formatted_alignment(alignment, blosum)
 
-    # Get identity and similarity
-    formatted = [b for _, b, _ in alignment]
-    identity = formatted.count("|")/len(formatted)
-    similarity = (formatted.count("|") + formatted.count(":"))/len(formatted)
-
-    # Output alignment
-    with open(args.output, "w") as OUT:
-        print("Score: {0}".format(scores[len(seq1),len(seq2)]), file=OUT)
-        print("Identity: {0:.3}%".format(identity*100), file=OUT)
-        print("Similarity: {0:.3}%".format(similarity*100), file=OUT)
-        print("".join([a for a, _, _ in alignment]), file=OUT)
-        print("".join([b for _, b, _ in alignment]), file=OUT)
-        print("".join([c for _, _, c in alignment]), file=OUT)
+    # Output file
+    output(args.output, alignment, scores, seq1, seq2)
 
 
 if __name__ == '__main__':
