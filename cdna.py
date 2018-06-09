@@ -1,3 +1,6 @@
+# Ok, here i don't use fastatools module because the will involve loading whole sequences
+# of FASTA sequences to memory and we can do it more memory efficient!
+
 import os
 import argparse
 from argparse import RawDescriptionHelpFormatter
@@ -20,37 +23,52 @@ def get_options():
     standard.add_argument('-o', "--output", dest="output", action='store',
                           required=True, help="Path to output FASTA.")
 
-    args = parser.parse_args()
+    arg = parser.parse_args()
 
     # Standardize paths
-    args.input = os.path.abspath(args.input)
-    args.output = os.path.abspath(args.output)
+    arg.input = os.path.abspath(arg.input)
+    arg.output = os.path.abspath(arg.output)
 
-    return args
+    return arg
 
 
-def get_complementary_fasta(input, output):
+def get_cdna(header, sequence):
+    """
+    Get's the complementary string of a FASTA tuple.
+
+    :param header: header of the FASTA sequence
+    :param sequence: sequence of the FASTA sequence
+    :return: tuple with the modified header and complementary sequence
+    """
+    header = header+"|cDNA"
+    sequence = "".join([translator[c] for c in sequence])
+    fasta_tuple = (header, sequence)
+
+    return fasta_tuple
+
+
+def get_complementary_fasta(fasta, output):
     """
     Get's the complementary string of a FASTA file
 
-    :param input: FASTA file input pathway
+    :param fasta: FASTA file input pathway
     :param output: FASTA file output pathway
     :return: Translated FASTA file
     """
-    assert isinstance(input, str)
+    assert isinstance(fasta, str)
     assert isinstance(output, str)
 
-    translator = {"A":"T", "T":"A", "C":"G", "G":"C"}
+    translator = {"A": "T", "T": "A", "C": "G", "G": "C"}
 
-    INPUT = open(input, "r")
-    OUTPUT = open(output, "w")
+    input_f = open(fasta, "r")
+    output_f = open(output, "w")
 
-    for line in INPUT:
+    for line in input_f:
         line = line.strip()
         if line.startswith(">"):
-            print(line+"|cDNA", file=OUTPUT)
+            print(line+"|cDNA", file=output_f)
         else:
-            print("".join([translator[c] for c in line]), file=OUTPUT)
+            print("".join([translator[c] for c in line]), file=output_f)
 
 
 def main(args):
@@ -60,8 +78,7 @@ def main(args):
 
 if __name__ == '__main__':
     # Command line options
-    args = get_options()
+    parameters = get_options()
 
     # Running script
-    main(args)
-
+    main(parameters)
