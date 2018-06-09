@@ -7,14 +7,14 @@ def single_fasta_sequence(filename):
     """
     seq = ""
     hd = ""
-    with open(filename, "r") as FASTA:
-        for line in FASTA:
-            assert isinstance(line, str)
-            line = line.strip()
-            if line.startswith(">"):
-                hd = line[1:]
-            else:
-                seq += line
+    # with open(filename, "r") as FASTA: # Important if we want to use with file inside
+    for line in filename:
+        assert isinstance(line, str)
+        line = line.strip()
+        if line.startswith(">"):
+            hd = line[1:]
+        else:
+            seq += line
 
     return hd, seq
 
@@ -25,25 +25,25 @@ def fasta_list(filename):
     :param filename: File object of the FASTA file.
     :return: list of duples containing (header, sequence) structure
     """
-    with open(filename, "r") as FASTA:
-        fastas = list()
-        hd = ""
-        seq = ""
+    # with open(filename, "r") as FASTA:
+    fastas = list()
+    hd = ""
+    seq = ""
 
-        for line in FASTA:
-            assert isinstance(line, str)
-            line = line.strip()
-            if line.startswith(">"):
-                if hd and seq:
-                    duple = (hd, seq)
-                    fastas.append(duple)
-                hd = line[1:]
-                seq = ""
-            else:
-                seq += line
+    for line in filename:
+        assert isinstance(line, str)
+        line = line.strip()
+        if line.startswith(">"):
+            if hd and seq:
+                duple = (hd, seq)
+                fastas.append(duple)
+            hd = line[1:]
+            seq = ""
+        else:
+            seq += line
 
-        duple = (hd, seq)
-        fastas.append(duple)
+    duple = (hd, seq)
+    fastas.append(duple)
 
     return fastas
 
@@ -56,21 +56,21 @@ def fasta_sequences(filename):
     :param filename: File object of the FASTA file.
     :return: iterable with  (header, sequence) s tructure
     """
-    with open(filename, "r") as FASTA:
-        hd = ""
-        seq = ""
-        for line in FASTA:
-            assert isinstance(line, str)
-            line = line.strip()
-            if line.startswith(">"):
-                if hd and seq:
-                    yield (hd, seq)
-                hd = line[1:]
-                seq = ""
-            else:
-                seq += line
+    # with open(filename, "r") as FASTA:
+    hd = ""
+    seq = ""
+    for line in filename:
+        assert isinstance(line, str)
+        line = line.strip()
+        if line.startswith(">"):
+            if hd and seq:
+                yield (hd, seq)
+            hd = line[1:]
+            seq = ""
+        else:
+            seq += line
 
-        yield (hd, seq)
+    yield (hd, seq)
 
 
 def slice_string_by_n(s, n):

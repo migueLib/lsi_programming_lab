@@ -20,7 +20,7 @@ def get_options():
                                      formatter_class=RawDescriptionHelpFormatter)
     # Standard Input
     standard = parser.add_argument_group(title='Standard input',
-                                         description='Standard input for SECIM tools.')
+                                         description='Standard input for tools.')
     standard.add_argument('-i', "--input", dest="input", action='store',
                           required=True, help="Path for input alignment")
     standard.add_argument('-o', "--output", dest="output", action='store',

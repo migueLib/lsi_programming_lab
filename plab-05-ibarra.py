@@ -1,5 +1,3 @@
-import os
-import re
 from fastatools import *
 
 # Easiest way
@@ -25,9 +23,21 @@ from fastatools import *
 # print(len(max_iter[1]), len(min_iter[1]))
 
 # Writing FASTA sequence
+# with open("handout_05/output.fasta", "w") as f:
+#    write_fasta(f, "albatross", "WHATFLAVQRISIT")
+#    write_fasta(f, "lumberjack", "ISLEEPALLNIGHTANDIWQASDFASDFMALMSDFLAMSDFNKAVAKSDKALDSKFASDFLKASRKAL\
+#                                    LDASLEEPALLNIGHTANDIWQASDFASDFMALMSDFLAMSDFNKAVAKSDKALDSKFASDFLKASRK\
+#                                    ALLDASLEEPALLNIGHTANDIWQASDFASDFMALMSDFLAMSDFNKAVAKSDKALDSKFASDFLKAS\
+#                                    KALLDASLEEPALLNIGHTANDIWQASDFASDFMALMSDFLAMSDFNKAVAKSDKALDSKFASDFLK\
+#                                    ASRKALLDAY")
+#    write_fasta(f, "deadparrot", "NQRWEGIANPLVE")
 
 
-with open("handout_05/output.fasta", "w") as f:
-    write_fasta(f, "albatross", "WHATFLAVQRISIT")
-    write_fasta(f, "lumberjack", "ISLEEPALLNIGHTANDIWQASDFASDFMALMSDFLAMSDFNKAVAKSDKALDSKFASDFLKASRKALLDASLEEPALLNIGHTANDIWQASDFASDFMALMSDFLAMSDFNKAVAKSDKALDSKFASDFLKASRKALLDASLEEPALLNIGHTANDIWQASDFASDFMALMSDFLAMSDFNKAVAKSDKALDSKFASDFLKASRKALLDASLEEPALLNIGHTANDIWQASDFASDFMALMSDFLAMSDFNKAVAKSDKALDSKFASDFLKASRKALLDAY")
-    write_fasta(f, "deadparrot", "NQRWEGIANPLVE")
+# Creating  module: Putting things together
+with open("handout_05/ecoli-genome.fna") as f:
+    species, genome = single_fasta_sequence(f)
+    print("The genome of", species, "contains", len(genome), "nucleotides.")
+
+with open("handout_05/truth.faa", "w") as f:
+    write_fasta(f,"theking","ELVISISALIVE")
+    write_fasta(f,"liverpoolfour","PAVLISDEAD")
