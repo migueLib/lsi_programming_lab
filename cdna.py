@@ -1,8 +1,6 @@
-# Ok, here i don't use fastatools module because the will involve loading whole sequences
-# of FASTA sequences to memory and we can do it more memory efficient!
-
 import os
 import argparse
+from fastatools import *
 from argparse import RawDescriptionHelpFormatter
 
 
@@ -40,40 +38,22 @@ def get_cdna(header, sequence):
     :param sequence: sequence of the FASTA sequence
     :return: tuple with the modified header and complementary sequence
     """
+    translator = {"A": "T", "T": "A", "C": "G", "G": "C"}
     header = header+"|cDNA"
     sequence = "".join([translator[c] for c in sequence])
-    fasta_tuple = (header, sequence)
 
-    return fasta_tuple
-
-
-def get_complementary_fasta(fasta, output):
-    """
-    Get's the complementary string of a FASTA file
-
-    :param fasta: FASTA file input pathway
-    :param output: FASTA file output pathway
-    :return: Translated FASTA file
-    """
-    assert isinstance(fasta, str)
-    assert isinstance(output, str)
-
-    translator = {"A": "T", "T": "A", "C": "G", "G": "C"}
-
-    input_f = open(fasta, "r")
-    output_f = open(output, "w")
-
-    for line in input_f:
-        line = line.strip()
-        if line.startswith(">"):
-            print(line+"|cDNA", file=output_f)
-        else:
-            print("".join([translator[c] for c in line]), file=output_f)
+    return header, sequence
 
 
 def main(args):
-    # Convert fasta file
-    get_complementary_fasta(args.input, args.output)
+    # Import data
+    fasta = fasta_sequences(args.input)
+
+    # Reverse_complementary and output
+    with open(args.output, "w") as out:
+        for hd, seq in fasta:
+            hd_c, seq_c = get_cdna(hd, seq)
+            write_fasta(out, hd_c, seq_c)
 
 
 if __name__ == '__main__':
