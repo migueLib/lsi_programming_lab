@@ -42,15 +42,14 @@ def get_orf(hd, seq, f):
 
     # Initialize index
     orf1_pos, orf2_pos, orf3_pos = [0, 0], [0, 0], [0, 0]
-    #orf4_pos, orf5_pos, orf6_pos = [0, 0], [0, 0], [0, 0]
+    orf4_pos, orf5_pos, orf6_pos = [0, 0], [0, 0], [0, 0]
 
 
     # Initialize empty ORFs sequences
     orf1_seq, orf2_seq, orf3_seq = "", "", ""
-    #orf4_seq, orf5_seq, orf6_seq = "", "", ""
+    orf4_seq, orf5_seq, orf6_seq = "", "", ""
 
     # Iterating over forward and reversed sequences
-    print(seq[511:514])
     for i in range(0, len(seq), 3):
         # Indices for 3 frames
         i, j, k = i, i+1, i+2
@@ -58,31 +57,30 @@ def get_orf(hd, seq, f):
         # Forward
         fr1 = seq[i:i+3]
         fr2 = seq[j:j+3]
-        print(fr2, j, j+3)
         fr3 = seq[k:k+3]
 
         # Reverse
-        #fr4 = seq_c[orf4_i: i]
-        #fr5 = seq_c[orf5_i: i+1]
-        #fr6 = seq_c[orf6_i: i+2]
+        fr4 = seq_c[i:i+3]
+        fr5 = seq_c[j:j+3]
+        fr6 = seq_c[k:k+3]
 
         # FORWARD
         # ORF 1
-        if fr1 == start:
+        if fr1 == start and not orf1_seq:
             orf1_seq = fr1
             orf1_pos[0] = i+1
         elif orf1_seq:
             orf1_seq += fr1
 
         # ORF 2
-        if fr2 == start:
+        if fr2 == start and not orf2_seq:
             orf2_seq = fr2
             orf2_pos[0] = j+1
         elif orf2_seq:
             orf2_seq += fr2
 
         # ORF 3
-        if fr3 == start:
+        if fr3 == start and not orf2_seq:
             orf3_seq = fr3
             orf3_pos[0] = k+1
         elif orf3_seq:
@@ -90,54 +88,51 @@ def get_orf(hd, seq, f):
 
         # REVERSE
         # ORF 4
-        #if fr4 == start:
-        #    orf4_seq = fr4
-        #    orf4_pos[1] = orf4_i+1
-        #elif orf4_seq:
-        #    orf4_seq += fr4
+        if fr4 == start and not orf4_seq:
+            orf4_seq = fr4
+            orf4_pos[0] = i+1
+        elif orf4_seq:
+            orf4_seq += fr4
 
-        # ORF 5
-        #if fr5 == start:
-        #    orf5_seq = fr5
-        #    orf5_pos[1] = orf5_i+1
-        #elif orf5_seq:
-        #    orf5_seq += fr5
+        # ORF 2
+        if fr5 == start and not orf5_seq:
+            orf5_seq = fr5
+            orf5_pos[0] = j+1
+        elif orf5_seq:
+            orf5_seq += fr5
 
-        # ORF 6
-        #if fr6 == start:
-        #    orf6_seq = fr6
-        #    orf6_pos[1] = orf6_i+1
-        #elif orf6_seq:
-        #    orf6_seq += fr6
+        # ORF 3
+        if fr6 == start and not orf6_seq:
+            orf6_seq = fr6
+            orf6_pos[0] = k+1
+        elif orf6_seq:
+            orf6_seq += fr6
 
         # Print founded sequences
         if fr1 in stop and orf1_seq:
             orf1_pos[1] = i+3
             write_fasta(f, hd+":{0}-{1}".format(orf1_pos[0], orf1_pos[1]), orf1_seq)
             orf1_seq = ""
-            #print(orf1_pos)
         if fr2 in stop and orf2_seq:
             orf2_pos[1] = j+3
             write_fasta(f, hd+":{0}-{1}".format(orf2_pos[0], orf2_pos[1]), orf2_seq)
             orf2_seq = ""
-            #print(orf2_pos)
         if fr3 in stop and orf3_seq:
             orf3_pos[1] = k+3
             write_fasta(f, hd+":{0}-{1}".format(orf3_pos[0], orf3_pos[1]), orf3_seq)
             orf3_seq = ""
-            #print(orf3_pos)
-        #if fr4 in stop and orf4_seq:
-        #    orf4_pos[0] = i+0
-        #    write_fasta(f, hd_c+":c{0}-{1}".format(orf4_pos[0], orf4_pos[1]), orf4_seq)
-        #    orf4_seq = ""
-        #if fr5 in stop and orf5_seq:
-        #    orf5_pos[0] = i+1
-        #    write_fasta(f, hd_c+":c{0}-{1}".format(orf5_pos[0], orf5_pos[1]), orf5_seq)
-        #    orf5_seq = ""
-        #if fr6 in stop and orf6_seq:
-        #    orf6_pos[0] = i+2
-        #    write_fasta(f, hd_c+":c{0}-{1}".format(orf6_pos[0], orf6_pos[1]), orf6_seq)
-        #    orf6_seq = ""
+        if fr4 in stop and orf4_seq:
+            orf4_pos[1] = i+3
+            write_fasta(f, hd_c+":c{0}-{1}".format(len(seq_c)-orf4_pos[0], len(seq_c)-orf4_pos[1]), orf4_seq)
+            orf4_seq = ""
+        if fr5 in stop and orf5_seq:
+            orf5_pos[1] = j+3
+            write_fasta(f, hd_c+":c{0}-{1}".format(len(seq_c)-orf5_pos[0], len(seq_c)-orf5_pos[1]), orf5_seq)
+            orf5_seq = ""
+        if fr6 in stop and orf6_seq:
+            orf6_pos[1] = k+3
+            write_fasta(f, hd_c+":c{0}-{1}".format(len(seq_c)-orf6_pos[0], len(seq_c)-orf6_pos[1]), orf6_seq)
+            orf6_seq = ""
 
 
 
@@ -152,7 +147,6 @@ def main(args):
 
     # Get ORFs
     for hd, seq in sequences:
-        print(seq)
         get_orf(hd, seq, output)
 
     # Close files

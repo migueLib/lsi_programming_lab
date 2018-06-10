@@ -40,7 +40,7 @@ def get_cdna(header, sequence):
     """
     translator = {"A": "T", "T": "A", "C": "G", "G": "C"}
     header = header+"|cDNA"
-    sequence = "".join([translator[c] for c in sequence])
+    sequence = "".join([translator[c] for c in sequence[::-1]])
 
     return header, sequence
 
