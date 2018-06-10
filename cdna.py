@@ -46,14 +46,19 @@ def get_cdna(header, sequence):
 
 
 def main(args):
-    # Import data
-    fasta = fasta_sequences(args.input)
+    # Opening input and output files
+    output = open(args.output, "w")
+    intput = open(args.input, "r")
 
-    # Reverse_complementary and output
-    with open(args.output, "w") as out:
-        for hd, seq in fasta:
-            hd_c, seq_c = get_cdna(hd, seq)
-            write_fasta(out, hd_c, seq_c)
+    # Import data
+    fasta = fasta_sequences(intput)
+    for hd, seq in fasta:
+        hd_c, seq_c = get_cdna(hd, seq)
+        write_fasta(output, hd_c, seq_c)
+
+    # Closing input and output files
+    output.close()
+    intput.close()
 
 
 if __name__ == '__main__':
