@@ -35,7 +35,9 @@ def get_options():
 def get_orf(hd, seq, f):
     # Setting up stop and start codons
     stop = ["TAA", "TAG", "TGA"]
+    stop_r = ["AAT", "GAT", "AGT"]
     start = "ATG"
+    start_r = "GTA"
 
     # Get complementary DNA
     hd_c, seq_c = get_cdna(hd, seq)
@@ -57,7 +59,7 @@ def get_orf(hd, seq, f):
     orf6_seq = ""
 
     # Get length of the sequence
-    n = len(seq)
+    n = len(seq_c)
 
     # Iterating over forward and reversed sequences
     for i in range(0, n, 3):
