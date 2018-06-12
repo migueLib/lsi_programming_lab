@@ -1,7 +1,6 @@
 import os
 import re
 import argparse
-from fastatools import *
 from argparse import RawDescriptionHelpFormatter
 
 
@@ -22,13 +21,16 @@ def get_options():
                           required=True, help="Path for ORFs FASTA")
     standard.add_argument('-g', "--genes", dest="genes", action='store',
                           required=True, help="Path to Genes FASTA.")
-    standard.add_argument('-t', "--threshold", dest="threshold", action='store', type=int,
-                          required=True, help="Path to Genes FASTA.")
+    standard.add_argument('-t', "--threshold", dest="threshold", action='store', type=int, default=0,
+                          required=False, help="Aminoacid threshold.")
+    standard.add_argument('-b', "--best", dest="best", action='store_true',
+                          required=False, default=False, help="Path to Genes FASTA.")
     arg = parser.parse_args()
 
     # Standardize paths
     arg.orfs = os.path.abspath(arg.orfs)
     arg.genes = os.path.abspath(arg.genes)
+    arg.threshold = arg.threshold*3
 
     return arg
 
@@ -55,54 +57,110 @@ def filter_by_len(positions, n):
     :param n: threshold for filtering
     :return: positions filtered
     """
-    return {i: j for i, j in positions.items() if abs(i-j) >= n}
+    dropped = dict()
+    keepped = dict()
+    for i, j in positions.items():
+        if abs(i-j) >= n:
+            keepped.setdefault(i, j)
+        else:
+            dropped.setdefault(i, j)
+
+    return keepped, dropped
 
 
-def get_stats(orfs, genes):
+def get_best_acc_threshold(orfs, genes):
+    max_orf = max(orfs.items(), key=lambda x: abs(x[0]-x[1]))
+    max_len = abs(max_orf[0] - max_orf[1])
+
+    results = list()
+    for i in range(0, max_len,3):
+        # Filter
+        keep, drop = filter_by_len(orfs, i)
+
+        # Accuracy
+        results.append([get_balanced_accuracy(set(genes.keys()), set(keep.keys()), set(drop.keys())), i])
+
+    acc, i = max(results)
+    keep, drop = filter_by_len(orfs, i)
+
+    return keep, acc, i
+
+
+def get_stats(orfs, genes, threshold, acc):
     """
     Get statistics for orfs and genes relation
 
     :param orfs: dictionary with orfs sequence positions
     :param genes: dictionary with genes sequence positions
+    :param threshold: threshold
+    :param acc: accuracy value
     :return: dictionary with
     """
-    # Get stats
+    # Get length
     n_orfs = len(orfs)
     n_genes = len(genes)
 
+    # Get correct start/end ORFs
     n_correct = len(set(orfs.items()) & set(genes.items()))
     r_correct = n_correct/n_orfs
 
+    # Get correct end ORFs
     n_ends = len(set(orfs.keys() & set(genes.keys())))
     r_ends = n_ends/n_orfs
 
+    # Missed genes
     n_mgenes = n_genes - n_ends
 
-    return n_orfs, n_genes, n_correct, r_correct, n_ends, r_ends, n_mgenes
+    # Print it!
+    print("------------------------------------------------------")
+    print("Threshold: {0}".format(threshold))
+    print("Accuracy: {0}".format(acc))
+    print("Number of ORFs: {0}".format(n_orfs))
+    print("Number of genes: {0}".format(n_genes))
+    print("ORFs correctly predicted: {0}".format(n_correct))
+    print("ORFs correctly predicted (ratio): {0}".format(r_correct))
+    print("ORFs ends correctly predicted: {0}".format(n_ends))
+    print("ORFs ends correctly predicted (ratio): {0}".format(r_ends))
+    print("Missed genes predicted: {0}".format(n_mgenes))
+
+
+def get_balanced_accuracy(OP, PP, PN):
+    """
+    Calculates the balanced accuracy for 3 sets
+    :param OP: Real positives
+    :param PP: Predicted positives
+    :param PN: Predicted negatives
+    :return: balanced accuracy
+    """
+    TP = len(OP & PP)
+    FP = len(PP - OP)
+    TN = len(PN - OP)
+    FN = len(OP & PN)
+
+    aac_balanced = 0.5 * ((TP/(TP+FN)) + (TN/(TN+FP)))
+
+    return aac_balanced
 
 
 def main(args):
     # Get positions of ORFs
-    pos_orfs = get_sequence_positions(args.orfs)
+    orfs = get_sequence_positions(args.orfs)
 
     # Get positions of genes
-    pos_genes = get_sequence_positions(args.genes)
+    genes = get_sequence_positions(args.genes)
 
-    # Filter scores
-    pos_orfs = filter_by_len(pos_orfs, args.threshold*3)
-    pos_genes = filter_by_len(pos_genes, args.threshold*3)
+    if args.best:
+        orfs, acc, args.threshold = get_best_acc_threshold(orfs, genes)
+
+    else:
+        # Filter scores
+        orfs, orfs_dropped = filter_by_len(orfs, args.threshold)
+
+        # Get accuracy
+        acc = get_balanced_accuracy(set(genes.keys()), set(orfs.keys()), set(orfs_dropped.keys()))
 
     # Get stats
-    n_orfs, n_genes, n_correct, r_correct, n_ends, r_ends, n_mgenes = get_stats(pos_orfs, pos_genes)
-
-    # Print data
-    print("Number of ORFs: {0}".format(n_orfs))
-    print("Number of genes: {0}".format(n_genes))
-    print("The total number of ORFs correctly predicted: {0}".format(n_correct))
-    print("The ratio of ORFs correctly predicted: {0}".format(r_correct))
-    print("The total number of ORFs ends correctly predicted: {0}".format(n_ends))
-    print("The ratio of ORFs ends correctly predicted: {0}".format(r_ends))
-    print("The ratio of missed genes predicted: {0}".format(n_mgenes))
+    get_stats(orfs, genes, args.threshold, acc)
 
 
 if __name__ == '__main__':
