@@ -1,0 +1,8 @@
+python correct_orfs.py -o handout_05/ecoli-orfs.ffn -g handout_05/ecoli-genes-standard.ffn -t 0
+python correct_orfs.py -o handout_05/ecoli-orfs.ffn -g handout_05/ecoli-genes-standard.ffn -t 50
+python correct_orfs.py -o handout_05/ecoli-orfs.ffn -g handout_05/ecoli-genes-standard.ffn -t 100
+python correct_orfs.py -o handout_05/ecoli-orfs.ffn -g handout_05/ecoli-genes-standard.ffn -t 150
+python correct_orfs.py -o handout_05/ecoli-orfs.ffn -g handout_05/ecoli-genes-standard.ffn -t 200
+python correct_orfs.py -o handout_05/ecoli-orfs.ffn -g handout_05/ecoli-genes-standard.ffn -t 250
+python correct_orfs.py -o handout_05/ecoli-orfs.ffn -g handout_05/ecoli-genes-standard.ffn -t 300
+python correct_orfs.py -o handout_05/ecoli-orfs.ffn -g handout_05/ecoli-genes-standard.ffn -t 350
