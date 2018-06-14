@@ -73,7 +73,7 @@ def get_best_acc_threshold(orfs, genes):
     max_len = abs(max_orf[0] - max_orf[1])
 
     results = list()
-    for i in range(0, max_len,3):
+    for i in range(0, max_len, 3):
         # Filter
         keep, drop = filter_by_len(orfs, i)
 

@@ -102,5 +102,7 @@ def write_fasta(f, hd, seq):
 
     # Print header
     print(">" + hd, file=f)
-    for s in sliced_sequences:
-        print(s, file=f)
+    for i in range(0,len(seq), 70):
+        print(seq[i:i+70], file=f)
+    #for s in sliced_sequences:
+    #    print(s, file=f)
