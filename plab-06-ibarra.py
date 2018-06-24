@@ -12,10 +12,15 @@ def read_distance_matrix(path):
     :return: dictionary
     """
     distances = pd.read_csv(path, sep="\s+", index_col=0, header=0, engine="python")
-    distances_dict = distances.to_dict()
-    #tuples = combinations(distances.columns.tolist(), 2)
-    #matrix = {(i, j): int(distances[i][j]) for i, j in tuples}
-    #print(distances_dict)
+    distances = distances.to_dict()
+
+    # Remove the diagonal from the distance matrix
+    distances_dict = dict()
+    for i in distances.keys():
+        distances_dict[i] = dict()
+        for j in distances.keys():
+            if i != j:
+                distances_dict[i][j]=distances[i][j]
 
     return distances_dict
 
@@ -42,68 +47,88 @@ def get_closest(matrix):
     :param matrix: distance matrix
     :return: cluster with the smallest distance
     """
-    return min(matrix.items(), key= lambda x:x[1])[0]
+    # Transform {key:{key:value}} to  {(key,key):value}
+    dis_matrix = dict()
+    for i in matrix.keys():
+        for j in matrix[i]:
+            dis_matrix[(i, j)] = matrix[i][j]
+
+    return min(dis_matrix.items(), key=lambda x: x[1])[0]
 
 
-def merge(matrix, closest):
+def merge(matrix, clusters):
     """
     Re-calculates distance matrix based on a pair of values
     :param matrix: matrix distance
-    :param closest: closest clusters in matrix
+    :param clusters: closest clusters in matrix
     :return: update matrix
     """
     # Removing min key from elements to_change (this will avoid problems later on)
-    del matrix[closest]
+    del matrix[clusters[0]][clusters[1]]
+    del matrix[clusters[1]][clusters[0]]
 
-    # Subset matrix into to_changed and unchanged
-    to_change = {(i, j): matrix[(i, j)] for i, j in matrix if i in closest or j in closest}
-    unchanged = ({(i, j): matrix[(i, j)] for i, j in matrix if i not in closest and j not in closest})
+    # Taking unchanged distances (the ones not included in the closest nodes
+    new_distances = dict()
+    c_to_merge = dict()
 
-    # Get single letters (except the ones in min)
-    singles = set()
-    for i,j in matrix.keys():
-        if i not in closest:
-            singles.update(i)
-        if j not in closest:
-            singles.update(j)
+    # Splitting matrix into the keys that are going to remain intact\
+    #  and the distances that need to be updated
+    cleaned = dict()
+    for i in matrix.keys():
+        cleaned[i] = dict()
+        for j in matrix[i].keys():
+            if j not in clusters:
+                cleaned[i][j] = matrix[i][j]
 
-    # Re calculate distance to merged values in to_changed values
-    print(closest)
-    print(singles)
-    print(matrix.keys())
-    print(to_change.keys())
-    print(unchanged.keys())
+    # Split cleaned matrix between the ones to merge and the ones that should not be touched
+    for i in cleaned:
+        if i in clusters:
+            c_to_merge[i] = cleaned[i]
+        else:
+            new_distances[i] = cleaned[i]
 
-    for i in singles:
-        print((i, closest[0]),(i, closest[1]))
+    # make the formula
+    keys_not_in_cluster = list(new_distances.keys())
+
+
+    new_distances[clusters] = dict()
+
+    for k in keys_not_in_cluster:
+        # Get val_r
         try:
-            val_a = to_change[(closest[0], i)]
+            val_r = cleaned[clusters[0]][k]
         except KeyError:
-            val_a = to_change[(i, closest[0])]
+            val_r = cleaned[k][clusters[0]]
+
+        # Get vel2
         try:
-            val_b = to_change[(closest[1], i)]
+            val_s = cleaned[clusters[1]][k]
         except KeyError:
-            val_b = to_change[(i, closest[1])]
+            val_s = cleaned[k][clusters[1]]
 
         # Calculates |R|,|S| and |R|+|S|
-        n = get_n_elements(closest)
-        r = get_n_elements(closest[0])
-        s = get_n_elements(closest[1])
-        unchanged[(closest, i)] = (r*val_a + s*val_b)/n
+        n = get_n_elements(clusters)
+        r = get_n_elements(clusters[0])
+        s = get_n_elements(clusters[1])
+        new_distances[k][clusters] = (r*val_r + s*val_s)/n
+        new_distances[clusters][k] = (r*val_r + s*val_s)/n
 
-    return unchanged
+    return new_distances
 
 
 # path_matrix = "handout_06/small-distances.txt"
 path_matrix = "handout_06/wiki"
+# distance_matrix = read_distance_matrix(path_matrix)
+
+# Get closest nodes
 distance_matrix = read_distance_matrix(path_matrix)
+print(distance_matrix)
 smallest = get_closest(distance_matrix)
-first = merge(distance_matrix, smallest)
-# Second
-print(first)
-s2 = get_closest(first)
-second = merge(first, s2)
-print(second)
-s3 = get_closest(second)
-third = merge(first, s3)
-print(third)
+distance_matrix = merge(distance_matrix, smallest)
+print(distance_matrix)
+smallest = get_closest(distance_matrix)
+distance_matrix = merge(distance_matrix, smallest)
+print(distance_matrix)
+smallest = get_closest(distance_matrix)
+distance_matrix = merge(distance_matrix, smallest)
+print(distance_matrix)
