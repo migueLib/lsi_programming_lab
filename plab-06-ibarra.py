@@ -1,7 +1,4 @@
-import os
-import numpy as np
 import pandas as pd
-from itertools import combinations
 
 
 def read_distance_matrix(path):
@@ -20,7 +17,7 @@ def read_distance_matrix(path):
         distances_dict[i] = dict()
         for j in distances.keys():
             if i != j:
-                distances_dict[i][j]=distances[i][j]
+                distances_dict[i][j] = distances[i][j]
 
     return distances_dict
 
@@ -53,7 +50,7 @@ def get_closest(matrix):
         for j in matrix[i]:
             dis_matrix[(i, j)] = matrix[i][j]
 
-    return min(dis_matrix.items(), key=lambda x: x[1])[0]
+    return min(dis_matrix.items(), key=lambda x: x[1])
 
 
 def merge(matrix, clusters):
@@ -116,19 +113,30 @@ def merge(matrix, clusters):
     return new_distances
 
 
-# path_matrix = "handout_06/small-distances.txt"
-path_matrix = "handout_06/wiki"
-# distance_matrix = read_distance_matrix(path_matrix)
+def hierarchical_clustering(matrix):
+    """
+    Calculates HC Hierarchical clustering for a matrix distance
 
-# Get closest nodes
+    :param matrix: distance matrix
+    :return:
+    """
+    heights=dict()
+    n_nodes = len(matrix)
+    n_cluster = 1
+    while n_cluster < n_nodes:
+        clusters = get_closest(matrix)
+        matrix = merge(matrix, clusters[0])
+        n_cluster = get_n_elements(clusters)
+        heights[clusters[0]] = clusters[1]
+
+    return heights
+
+
+# path_matrix = "handout_06/small-distances.txt"
+# Reading distance matrix
+path_matrix = "handout_06/wiki"
 distance_matrix = read_distance_matrix(path_matrix)
-print(distance_matrix)
-smallest = get_closest(distance_matrix)
-distance_matrix = merge(distance_matrix, smallest)
-print(distance_matrix)
-smallest = get_closest(distance_matrix)
-distance_matrix = merge(distance_matrix, smallest)
-print(distance_matrix)
-smallest = get_closest(distance_matrix)
-distance_matrix = merge(distance_matrix, smallest)
-print(distance_matrix)
+
+# Get hierarchical clustering for distance matrix
+hc = hierarchical_clustering(distance_matrix)
+print(hc)
