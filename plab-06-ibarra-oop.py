@@ -82,8 +82,8 @@ class DistanceMatrix:
             # Calculates |R|,|S| and |R|+|S|
             r = self.get_n_elements(self.min_key[0])
             s = self.get_n_elements(self.min_key[1])
-            new_distances[k][self.min_key] = (r * val_r + s * val_s) / (r+s)
-            new_distances[self.min_key][k] = (r * val_r + s * val_s) / (r+s)
+            new_distances[k][self.min_key] = (r*val_r + s*val_s) / (r+s)
+            new_distances[self.min_key][k] = (r*val_r + s*val_s) / (r+s)
 
         self.matrix = new_distances
 
