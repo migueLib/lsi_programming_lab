@@ -1,6 +1,5 @@
 import pandas as pd
 
-
 class DistanceMatrix:
     def __init__(self, path):
         distances = pd.read_csv(path, sep="\s+", index_col=0, header=0, engine="python")
@@ -14,10 +13,13 @@ class DistanceMatrix:
                 if i != j:
                     self.matrix[i][j] = distances[i][j]
 
+
     def get_closest(self):
         dis_matrix = dict()
         for i in self.matrix.keys():
             for j in self.matrix[i].keys():
+                A = self.get_n_elements(i)
+                B = self.get_n_elements(j)
                 dis_matrix[(i, j)] = self.matrix[i][j]
 
         self.min = min(dis_matrix.items(), key=lambda x: x[1])
@@ -87,9 +89,7 @@ class DistanceMatrix:
 
         self.matrix = new_distances
 
-
     def hierarchical_clustering(self):
-
         self.heights = dict()
         n_nodes = len(self.matrix)
         n_cluster = 1
@@ -100,8 +100,62 @@ class DistanceMatrix:
             self.merge()
             n_cluster = self.get_n_elements(self.min)
 
+    def print_dendrogram(self, sep=3):
+        def is_pair(T):
+            return type(T) == tuple and len(T) == 2
+
+        def max_height(T):
+            if is_pair(T):
+                h = max(max_height(T[0]), max_height(T[1]))
+            else:
+                h = len(str(T))
+            return h + sep
+
+        # Initialize active levels
+        active_levels = {}
+
+        def traverse(T, h, is_first):
+            # Get separations for the pairs (start)
+            if is_pair(T):
+                traverse(T[0], h - sep, 1)
+                string = [' '] * (h - sep)
+                string.append('|')
+            else:
+                string = list(str(T))
+                string.append(' ')
+
+            # Get heights
+            while len(string) < h:
+                string.append('-')
+
+            # Get corners
+            if is_first >= 0:
+                string.append('+')
+                if is_first:
+                    active_levels[h] = 1
+                else:
+                    del active_levels[h]
+
+            A = list(active_levels)
+            A.sort()
+            for L in A:
+                if len(string) < L:
+                    while len(string) < L:
+                        string.append(' ')
+                    # Get separations for the pairs of values (end)
+                    string.append('|')
+
+            print(''.join(string))
+
+            if is_pair(T):
+                traverse(T[1], h - sep, 0)
+
+        traverse(self.min_key, max_height(self.min_key), -1)
+
 
 path_matrix = "handout_06/wiki"
 dm = DistanceMatrix(path_matrix)
 dm.hierarchical_clustering()
 print(dm.heights)
+dm.print_dendrogram()
+
