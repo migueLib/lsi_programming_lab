@@ -23,24 +23,20 @@ def get_scores(i, j, seq, loop=1):
 
 def matched_base_pairs(i, j, seq, matrix, loop=1):
     matched_positions = []
-    # Case 1: the sequence length must be greater than 2 to continue
     if j - i + 1 >= loop + 2:
         if matrix[i][j] == matrix[i + 1][j - 1] + delta.get((seq[i], seq[j]), 0):
-            # Case 2 where if new match made then append to list
             if delta.get((seq[i], seq[j]), 0):
                 matched_positions.append((i, j))
             if matched_base_pairs(i + 1, j - 1, seq, matrix, loop=loop):
                 matched_positions.extend(matched_base_pairs(i + 1, j - 1, seq, matrix,
                                                             loop=loop))
         else:
-            # Case 3, find k in range (i,j) and get list of paired of comp bases then join them
             for k in range(i, j - 1):
                 if matrix[i][j] == matrix[i][k] + matrix[k + 1][j]:
                     first_half = matched_base_pairs(i, k, seq, matrix, loop=loop)
                     second_half = matched_base_pairs(k + 1, j, seq, matrix, loop=loop)
                     if first_half and second_half:
                         matched_positions.extend((first_half, second_half))
-                # Once we have found that k value we break from the loop
                 break
 
     return matched_positions
@@ -79,6 +75,7 @@ def score_nussinov(seq, loop=1):
             matrix[i][j] = get_scores(i, j, seq, loop=loop)
 
     return matrix
+
 
 def scoremethis(seq):
     # Create matrix
