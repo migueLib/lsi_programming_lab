@@ -1,0 +1,2 @@
+python dotplot.py -sA human_pax6_NM_001604.fasta -sB mouse_pax6_NM_013627.fasta -w 9 -s 6 -t human_vs_mouse -o human_vs_mouse.pdf
+python dotplot.py -sA PAX6_HUMAN_P26367.fasta -sB eyeless_NP_001014693.1.fasta -w 9 -s 6 -t pax_vs_eyeless -o pax_vs_eyeless.pdf
